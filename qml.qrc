@@ -4,5 +4,6 @@
         <file>MemoryChunk.qml</file>
         <file>MemoryList.qml</file>
         <file>RomListModel.qml</file>
+        <file>MemoryFileDialog.qml</file>
     </qresource>
 </RCC>

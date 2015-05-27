@@ -14,7 +14,9 @@ ApplicationWindow {
             title: qsTr("&File")
             MenuItem {
                 text: qsTr("&Open")
-                onTriggered: messageDialog.show(qsTr("Open action triggered"));
+                onTriggered: {
+                    fileDialog.open()
+                }
             }
             MenuItem {
                 text: qsTr("E&xit")
@@ -26,6 +28,12 @@ ApplicationWindow {
    MemoryList{
        color: "#0051ff"
 
+   }
+   MemoryFileDialog{
+       id:fileDialog
+       onFileChosen: {
+            MemoryFileEngine.loadFile(filepath)
+       }
    }
 
     MessageDialog {
