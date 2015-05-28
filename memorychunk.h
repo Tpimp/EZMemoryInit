@@ -6,7 +6,7 @@
 #include <QPair>
 #include <QtQml>
           // Data Value, USER Comment
-typedef   QPair<QString,QString> MEMVALUE;
+typedef   QPair<long,QString> MEMVALUE;
 
 Q_DECLARE_METATYPE(MEMVALUE)
 class MemoryInitFile;
@@ -55,8 +55,8 @@ signals:
     void endAddressChanged(QString  endAddress);
     void purposeChanged(QString purpose);
     void colorChanged(QString color);
-    void addressValueAdded(QString address, QString value, QString comment);
-    void addressValueRemoved(QString address);
+    void addressValueAdded(long address, long value, QString comment);
+    void addressValueRemoved(long address);
 
 public slots:
     void setName(const QString & name);
@@ -64,8 +64,8 @@ public slots:
     void setEndAddress(const QString & endaddress);
     void setPurpose(const QString & purpose);
     void setColor(const QString & color);
-    void addValueAt(QString address, QString value, QString comment);
-    void removeValueAt(QString address);
+    void addValueAt(long address, long value, QString comment);
+    void removeValueAt(long address);
 
 private:
     // Header information
@@ -76,7 +76,7 @@ private:
     QString   mColor;
 
     // Data <ADDRESS, <DATA,COMMENT>>
-    QHash<QString,MEMVALUE>    mData;
+    QHash<long,MEMVALUE>    mData;
 
 };
 //Q_DECLARE_METATYPE(MemoryChunk)

@@ -8,9 +8,9 @@ MemoryChunk::MemoryChunk(QString name, QString startaddr, QString endaddress, QS
 
 }
 
-void MemoryChunk::addValueAt(QString address, QString value, QString comment)
+void MemoryChunk::addValueAt(long address, long value, QString comment)
 {
-    mData.insert(address,QPair<QString,QString>(value,comment));
+    mData.insert(address,MEMVALUE(value,comment));
 }
 
 void MemoryChunk::setColor(const QString &color)
@@ -37,7 +37,7 @@ void MemoryChunk::setStartAddress(const QString &startaddress)
     mStartAddr = startaddress;
 }
 
-void MemoryChunk::removeValueAt(QString address)
+void MemoryChunk::removeValueAt(long address)
 {
     mData.remove(address);
 }

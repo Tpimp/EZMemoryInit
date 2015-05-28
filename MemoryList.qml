@@ -48,6 +48,7 @@ Rectangle{
                     Rectangle{
                         color:"white"
                         TextField{
+                            id:writePath
                             anchors.fill: parent
                             anchors.margins: 4
                             text:"C:/Documents/Stuff"
@@ -72,6 +73,12 @@ Rectangle{
                             color:"white"
                             text:"Browse..."
                             font.pixelSize: height* .45 > width/text.length ? width/text.length:height *.45
+                        }
+                        MouseArea{
+                            anchors.fill: parent
+                            onClicked:{
+                                MemoryFileEngine.writeFile(writePath.text)
+                            }
                         }
                     }
                 }

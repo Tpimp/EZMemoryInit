@@ -50,6 +50,138 @@ int MemoryInitFile::chunkCount(QQmlListProperty<MemoryChunk> *list)
     return memoryFile->mChunks.count();
 }
 
+long MemoryInitFile::getAddressLong(QString & addr)
+{
+    int base(10);
+    switch(mAddrRadix.at(0).toLatin1())
+    {
+        case 'O':// octal
+        {
+            base = 7;
+            break;
+        }
+        case 'D': // decimal
+        {
+            base = 10;
+            break;
+        }
+        case 'B': // Binary
+        {
+            base = 2;
+            break;
+        }
+        case 'H': // hex
+        {
+            base = 16;
+            break;
+        }
+        default: break;
+    }
+    bool value_converted(false);
+    long new_addr(addr.toLong(&value_converted,base));
+    if(!value_converted)
+        new_addr = -1;
+    return new_addr;
+
+
+}
+
+QString MemoryInitFile::getAddressString(long addr)
+{
+    int base(10);
+    switch(mAddrRadix.at(0).toLatin1())
+    {
+        case 'O':// octal
+        {
+            base = 7;
+            break;
+        }
+        case 'D': // decimal
+        {
+            base = 10;
+            break;
+        }
+        case 'B': // Binary
+        {
+            base = 2;
+            break;
+        }
+        case 'H': // hex
+        {
+            base = 16;
+            break;
+        }
+        default: break;
+    }
+    return QString::number(addr,base);
+
+}
+long MemoryInitFile::getValueLong(QString & value)
+{
+    int base(10);
+    switch(mDataRadix.at(0).toLatin1())
+    {
+        case 'O':// octal
+        {
+            base = 7;
+            break;
+        }
+        case 'D': // decimal
+        {
+            base = 10;
+            break;
+        }
+        case 'B': // Binary
+        {
+            base = 2;
+            break;
+        }
+        case 'H': // hex
+        {
+            base = 16;
+            break;
+        }
+        default: break;
+    }
+    bool value_converted(false);
+    long new_addr(value.toLong(&value_converted,base));
+    if(!value_converted)
+        new_addr = -1;
+    return new_addr;
+
+
+}
+
+QString MemoryInitFile::getValueString(long value)
+{
+    int base(10);
+    switch(mDataRadix.at(0).toLatin1())
+    {
+        case 'O':// octal
+        {
+            base = 7;
+            break;
+        }
+        case 'D': // decimal
+        {
+            base = 10;
+            break;
+        }
+        case 'B': // Binary
+        {
+            base = 2;
+            break;
+        }
+        case 'H': // hex
+        {
+            base = 16;
+            break;
+        }
+        default: break;
+    }
+    return QString::number(value,base);
+
+}
 MemoryChunk* MemoryInitFile::valueAt(QQmlListProperty<MemoryChunk> *list, int index)
 {
     MemoryInitFile *memoryFile = qobject_cast<MemoryInitFile*>(list->object);
@@ -64,9 +196,9 @@ void MemoryInitFile::parseInputFile(QUrl &file)
 {
   QString file_path(file.toLocalFile());
   QFile input_file(file_path);
-  input_file.open(QFile::ReadOnly);
+  input_file.open(QFile::ReadOnly | QFile::Text);
   QString inputBuffer(input_file.readAll());
-  QStringList lines_in_file(inputBuffer.split("\r\n"));
+  QStringList lines_in_file(inputBuffer.split("\n"));
   MEMORY_INIT_FILE_PARSE_STATE current_state(NAME);
   MemoryChunk * current_chunk;
   bool got_depth(false);
@@ -336,11 +468,13 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         // first is value second is comment
                         QString address(mem_value_list.at(0));
                         address = address.replace(" ",""); // remove spaces
+                        address = address.toLower();
                         // could test Address for validity of format (add in future versions)
                         QString value(value_list.at(0));
                         value = value.split(";")[0];
+                        value = value.toLower();
                         QString comment(value_list.at(1));
-                        current_chunk->addValueAt(address,value,comment);
+                        current_chunk->addValueAt(getAddressLong(address),getValueLong(value),comment);
                     }
                     else // no comment (not an error)
                     {
@@ -350,7 +484,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         // could test Address for validity of format (add in future versions)
                         QString value(value_list.at(0));
                         value = value.split(";")[0];
-                        current_chunk->addValueAt(address, value, "");
+                        current_chunk->addValueAt(getAddressLong(address),getValueLong(value), "");
                     }
                 }
                 else
@@ -372,6 +506,116 @@ void MemoryInitFile::parseInputFile(QUrl &file)
       }
   }
 
+}
+
+
+void MemoryInitFile::writeFile(QString filepath)
+{
+    bool generate_file(false);
+    QString converted_file_path = QDir::toNativeSeparators(filepath);
+    if(QFile::exists(converted_file_path))
+    {
+        // file already exists pop overwrite notice?
+
+    }
+    else
+    {
+        // create it
+        generate_file = true;
+    }
+    if(generate_file)
+    {
+
+
+        QFile  output_file(converted_file_path);
+        output_file.setFileName(converted_file_path);
+        qDebug() << "Set filename to " << output_file.fileName();
+        if(!output_file.open(QIODevice::WriteOnly | QIODevice::Text))
+            return;
+
+        // convert to QByteArray
+        QByteArray buffer("--");
+        buffer.append(mName);
+        buffer.append("\n\n");// write name
+        output_file.write(buffer);
+        buffer = "DEPTH = ";
+        buffer.append(mDepth);
+        buffer.append(";                 --The size of the memory in words\n");
+        output_file.write(buffer);
+        buffer = "WIDTH = ";
+        buffer.append(mWidth);
+        buffer.append(";                 --The size of data in bits\n");
+        output_file.write(buffer);
+        buffer = "ADDRESS_RADIX = ";
+        buffer.append(mAddrRadix);
+        buffer.append(";                 --The radix for address values\n");
+        output_file.write(buffer);
+        buffer = "DATA_RADIX = ";
+        buffer.append(mDataRadix);
+        buffer.append(";                 --The radix for data values\n");
+        output_file.write(buffer);
+        buffer = "CONTENT\nBEGIN\n";
+        output_file.write(buffer);
+        // write each object and their headers
+        foreach(MemoryChunk * chunk, mChunks)
+        {
+            // write header
+            buffer = "%";
+            buffer.append(chunk->mName);
+            buffer.append('\n');
+            buffer.append("purpose:\"");
+            buffer.append(chunk->mPurpose);
+            buffer.append("\"\n");
+            buffer.append("startAddress:\"");
+            buffer.append(chunk->mStartAddr);
+            buffer.append("\"\n");
+            buffer.append("endAddress:\"");
+            buffer.append(chunk->mEndAddr);
+            buffer.append("\"\n%\n");
+            // write header (buffered)
+            output_file.write(buffer);
+            // assume sequential block of data (or issues with data)
+            long current_address(getAddressLong(chunk->mStartAddr));
+            long end_address(getAddressLong(chunk->mEndAddr));
+            int length_end_addr(chunk->mEndAddr.length());
+            while(current_address <= end_address)
+            {
+                buffer = "";
+                if(chunk->mData.contains(current_address))
+                {
+                    MEMVALUE data = chunk->mData.value(current_address);
+                    long value(data.first);
+                    QString comment(data.second);
+                    QString addr_str(getAddressString(current_address));
+                    int zeroes_to_add(length_end_addr-addr_str.length());
+                    QString zeroes('0');
+                    addr_str.prepend(zeroes.repeated(zeroes_to_add));
+                    buffer.append(addr_str);
+                    buffer.append(" : ");
+                    QString value_str(getValueString(value));
+                    buffer.append(value_str);
+                    buffer.append(";");
+                    if(!comment.isEmpty())
+                    {
+                        buffer.append(" --");
+                        buffer.append(comment);
+
+                    }
+
+                    buffer.append("\n");
+                    output_file.write(buffer);
+                }
+                current_address += 1;
+            }
+            buffer = "--END ";
+            buffer.append(chunk->mName);
+            buffer.append("\n");
+            output_file.write(buffer);
+        }
+        buffer = "END;";
+        output_file.write(buffer);
+        output_file.close();
+    }
 }
 
 

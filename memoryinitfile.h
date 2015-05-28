@@ -28,7 +28,7 @@ signals:
 
 public slots:
     void loadFile(QString filepath);
-
+    void writeFile(QString filepath);
 private:
     QString   mName;
     QString   mDepth;
@@ -38,6 +38,10 @@ private:
     QList<MemoryChunk*>   mChunks;
     // private methods
     void parseInputFile(QUrl &file);
+    QString getAddressString(long addr);
+    long getAddressLong(QString & addr);
+    QString getValueString(long value);
+    long getValueLong(QString & value);
     static void appendToList(QQmlListProperty<MemoryChunk > *list, MemoryChunk * chunk);
     static MemoryChunk * valueAt(QQmlListProperty<MemoryChunk > *list, int index);
     static int   chunkCount(QQmlListProperty<MemoryChunk > *list);
