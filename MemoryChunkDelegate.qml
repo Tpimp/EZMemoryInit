@@ -85,6 +85,12 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: width/text.length + 4
         }
+        MouseArea{
+            anchors.fill: parent
+            onClicked:{
+                MemoryFileEngine.setCurrentChunk(index);
+            }
+        }
     }
 }
 

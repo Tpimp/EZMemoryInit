@@ -159,8 +159,11 @@ long MemoryInitFile::getValueLong(QString & value)
     if(!value_converted)
         new_addr = -1;
     return new_addr;
+}
 
-
+MemoryChunk* MemoryInitFile::currentChunk()
+{
+    return mCurrentChunk;
 }
 
 QString MemoryInitFile::getValueString(long value)
@@ -512,6 +515,17 @@ void MemoryInitFile::parseInputFile(QUrl &file)
   emit chunksChanged(chunks());
 }
 
+void MemoryInitFile::setCurrentChunk(int index)
+{
+    MemoryChunk * chunk(nullptr);
+    if(mChunks.length()> index && index >= 0)
+        chunk = mChunks.at(index);
+    if(mCurrentChunk != chunk)
+    {
+        mCurrentChunk = chunk;
+        emit currentChunkChanged(chunk);
+    }
+}
 
 void MemoryInitFile::writeFile(QString filepath)
 {
@@ -582,14 +596,16 @@ void MemoryInitFile::writeFile(QString filepath)
             long current_address(getAddressLong(chunk->mStartAddr));
             long end_address(getAddressLong(chunk->mEndAddr));
             int length_end_addr(chunk->mEndAddr.length());
+            int index;
             while(current_address <= end_address)
             {
                 buffer = "";
-                if(chunk->mData.contains(current_address))
+
+                if(chunk->containsAddress(current_address,index))
                 {
-                    MEMVALUE data = chunk->mData.value(current_address);
-                    long value(data.first);
-                    QString comment(data.second);
+                    ChunkData * data = chunk->mData.at(index);
+                    long value(data->mValue);
+                    QString comment(data->mComment);
                     QString addr_str(getAddressString(current_address));
                     int zeroes_to_add(length_end_addr-addr_str.length());
                     QString zeroes('0');

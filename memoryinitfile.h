@@ -20,9 +20,12 @@ class MemoryInitFile : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<MemoryChunk> chunks READ chunks NOTIFY chunksChanged)
+    Q_PROPERTY(MemoryChunk * currentChunk READ currentChunk NOTIFY currentChunkChanged)
 public:
     explicit MemoryInitFile(QObject *parent = 0);
     QQmlListProperty<MemoryChunk> chunks();
+    MemoryChunk * currentChunk();
+
     ~MemoryInitFile();
 
 signals:
@@ -35,16 +38,18 @@ signals:
     void addressValueRemoved(long address);
     void newChunkAdded(QString name, QString startAddr, QString endAddr, QString purpose);
     void chunksChanged(QQmlListProperty<MemoryChunk> list);
-
+    void currentChunkChanged(MemoryChunk * current_chunk);
 public slots:
     void loadFile(QString filepath);
     void writeFile(QString filepath);
+    void setCurrentChunk(int index);
 private:
     QString   mName;
     QString   mDepth;
     QString   mWidth;
     QString   mAddrRadix;
     QString   mDataRadix;
+    MemoryChunk * mCurrentChunk;
     QList<MemoryChunk*>   mChunks;
     // private methods
     void parseInputFile(QUrl &file);

@@ -10,11 +10,34 @@ MemoryChunk::MemoryChunk(QString name, QString startaddr, QString endaddress, QS
 
 void MemoryChunk::addValueAt(long address, long value, QString comment)
 {
-    mData.insert(address,MEMVALUE(value,comment));
-   // MemoryInitFile* parent_ptr = reinterpret_cast<MemoryInitFile *>(parent());
-    //emit parent_ptr->addressValueAdded(address,value,comment);
+    ChunkData* data(new ChunkData(address,value,comment,this));
+    mData.append(data);
+
 }
 
+
+
+
+QQmlListProperty<ChunkData> MemoryChunk::addresses()
+{
+    return QQmlListProperty<ChunkData>(this,mData);
+}
+
+bool MemoryChunk::containsAddress(long address, int &index)
+{
+    bool found(false);
+    for(index = 0; index < mData.length(); index++)
+    {
+        if(mData.at(index)->mAddress == address)
+        {
+            found = true;
+            break;
+        }
+    }
+    if(!found)
+        index = -1;
+    return found;
+}
 void MemoryChunk::setColor(const QString &color)
 {
     mColor = color;
@@ -41,13 +64,32 @@ void MemoryChunk::setStartAddress(const QString &startaddress)
 
 void MemoryChunk::removeValueAt(long address)
 {
-    mData.remove(address);
-  // MemoryInitFile* parent_ptr = reinterpret_cast<MemoryInitFile *>(parent());
-   // emit parent_ptr->addressValueRemoved(address);
+    ChunkData * ptr(nullptr);
+    foreach(ChunkData * data, mData)
+    {
+        if(data->mAddress == address)
+        {
+            ptr = data;
+            break;
+        }
+    }
+    if(ptr)
+    {
+        mData.removeOne(ptr);
+        delete ptr;
+    }
+    else
+    {
+        qDebug() << "Did not find memory data for address: " << address;
+    }
 }
 
 MemoryChunk::~MemoryChunk()
 {
-
+    while(!mData.isEmpty())
+    {
+       ChunkData * ptr(mData.takeFirst());
+       delete ptr;
+    }
 }
 

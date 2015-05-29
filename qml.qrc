@@ -6,5 +6,6 @@
         <file>MemoryFileDialog.qml</file>
         <file>ToolBar.qml</file>
         <file>MemoryChunkDelegate.qml</file>
+        <file>ChunkEditorView.qml</file>
     </qresource>
 </RCC>

@@ -39,6 +39,11 @@ ApplicationWindow {
        color: "#0051ff"
 
    }
+   ChunkEditorView
+   {
+       visible: false
+   }
+
    MemoryFileDialog{
        id:fileDialog
        onFileChosen: {

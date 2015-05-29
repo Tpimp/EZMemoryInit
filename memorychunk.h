@@ -11,6 +11,73 @@ typedef   QPair<long,QString> MEMVALUE;
 Q_DECLARE_METATYPE(MEMVALUE)
 class MemoryInitFile;
 
+
+class ChunkData :public QObject
+{
+
+    Q_OBJECT // Define QObject Property Bag
+    Q_PROPERTY(long address READ address WRITE setAddress NOTIFY addressChanged)
+    Q_PROPERTY(long value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(QString comment READ comment WRITE setComment NOTIFY commentChanged)
+
+public:
+    long mAddress;
+    long mValue;
+    QString mComment;
+    long address()
+    {
+        return mAddress;
+    }
+    long value()
+    {
+        return mValue;
+    }
+    QString comment()
+    {
+        return mComment;
+    }
+
+    ChunkData(long address = -1, long value = 0,
+              QString comment = "",QObject * parent = nullptr)
+        :QObject(parent), mAddress(address),mValue(value),
+         mComment(comment){}
+
+signals:
+    void addressChanged(long address);
+    void valueChanged(long value);
+    void commentChanged(QString comment);
+
+public slots:
+    void setAddress(long address)
+    {
+        if(mAddress != address)
+        {
+            mAddress = address;
+            emit addressChanged(address);
+        }
+    }
+    void setValue(long value)
+    {
+        if(mValue != value)
+        {
+            mValue = value;
+            emit valueChanged(value);
+        }
+    }
+
+    void setComment(QString comment)
+    {
+        if(mComment != comment)
+        {
+            mComment = comment;
+            emit commentChanged(comment);
+        }
+    }
+
+
+};
+
+
 class MemoryChunk : public QObject
 {
     Q_OBJECT
@@ -20,6 +87,7 @@ class MemoryChunk : public QObject
     Q_PROPERTY(QString endAddress READ endAddress WRITE setEndAddress NOTIFY endAddressChanged)
     Q_PROPERTY(QString purpose READ purpose WRITE setPurpose NOTIFY purposeChanged)
     Q_PROPERTY(QString color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QQmlListProperty<ChunkData> addresses READ addresses NOTIFY addressesChanged)
     friend class MemoryInitFile;
 
 public:
@@ -46,7 +114,8 @@ public:
     {
         return mColor;
     }
-
+    bool containsAddress(long address, int & index);
+    QQmlListProperty<ChunkData> addresses();
     ~MemoryChunk();
 
 signals:
@@ -57,6 +126,8 @@ signals:
     void colorChanged(QString color);
     void addressValueAdded(long address, long value, QString comment);
     void addressValueRemoved(long address);
+
+    void addressesChanged(QQmlListProperty<ChunkData> data);
 
 public slots:
     void setName(const QString & name);
@@ -74,9 +145,8 @@ private:
     QString   mEndAddr;
     QString   mPurpose;
     QString   mColor;
-
     // Data <ADDRESS, <DATA,COMMENT>>
-    QHash<long,MEMVALUE>    mData;
+    QList<ChunkData *>    mData;
 
 };
 
