@@ -13,6 +13,7 @@ Rectangle{
     property string endAddress: ""
     property real   memoryWidth: 0
     property real   memoryDepth: 32
+    property alias  fileName:fileText.text
     Rectangle
     {
         id:fileNameBar
@@ -26,6 +27,7 @@ Rectangle{
         border.color: "black"
         border.width: 2
         Text{
+            id: fileText
             anchors.fill: parent
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -54,9 +56,12 @@ Rectangle{
             height:parent.height
             radius: 16
             ListView{
+                id:chunkList
                 width: parent.width
-                height: parent.height
-
+                anchors.top:listHeader.bottom
+                anchors.topMargin:4
+                height: parent.height - listHeader.height
+                anchors.horizontalCenter: parent.horizontalCenter
                 spacing: parent.height * .01
                 model:MemoryFileEngine.chunks
                 delegate:MemoryChunkDelegate{
@@ -64,6 +69,26 @@ Rectangle{
                     width:parent.width
                     anchors.margins: 10
                 }
+            }
+            Rectangle{
+                id:listHeader
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top:parent.top
+                color:"darkblue"
+                border.color: "black"
+                border.width:2
+                height:chunkList.height/8
+                width:chunkList.width
+                radius:4
+                Text{
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text:"Memory Chunks In File"
+                    color:"white"
+                    font.pixelSize: height*.65
+                }
+
             }
         }
         Rectangle{

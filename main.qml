@@ -10,7 +10,9 @@ ApplicationWindow {
     visible: true
     Connections{
         target: MemoryFileEngine
-        //onNewChunkAdded
+        onFileLoadedSuccesfully:{
+            memoryFileInfo.fileName = filename
+        }
     }
 
     menuBar: MenuBar {
@@ -36,6 +38,7 @@ ApplicationWindow {
     }
 
    MemoryList{
+       id: memoryFileInfo
        color: "#0051ff"
 
    }

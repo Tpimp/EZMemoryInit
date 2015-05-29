@@ -39,6 +39,7 @@ signals:
     void newChunkAdded(QString name, QString startAddr, QString endAddr, QString purpose);
     void chunksChanged(QQmlListProperty<MemoryChunk> list);
     void currentChunkChanged(MemoryChunk * current_chunk);
+    void fileLoadedSuccesfully(QString filename);
 public slots:
     void loadFile(QString filepath);
     void writeFile(QString filepath);

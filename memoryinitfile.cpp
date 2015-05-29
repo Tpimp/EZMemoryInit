@@ -201,6 +201,7 @@ QString MemoryInitFile::getValueString(long value)
 void MemoryInitFile::parseInputFile(QUrl &file)
 {
   QString file_path(file.toLocalFile());
+  file_path = QDir::toNativeSeparators(file_path);
   QFile input_file(file_path);
   input_file.open(QFile::ReadOnly | QFile::Text);
   QString inputBuffer(input_file.readAll());
@@ -213,6 +214,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
   bool got_dradix(false);
   bool looking_for_content(false);
   bool looking_for_begin(false);
+  bool errored(false);
   for(int index(0); index < lines_in_file.length(); index++)
   {
       QString current_line(lines_in_file.at(index));
@@ -512,7 +514,15 @@ void MemoryInitFile::parseInputFile(QUrl &file)
       }
 
   }
-  emit chunksChanged(chunks());
+  if(!errored)
+  {
+
+      QString filename(file_path);
+      int last_index(filename.lastIndexOf(QDir::separator()));
+      filename.remove(0,last_index+1);
+      emit fileLoadedSuccesfully(filename);
+      emit chunksChanged(chunks());
+  }
 }
 
 void MemoryInitFile::setCurrentChunk(int index)
