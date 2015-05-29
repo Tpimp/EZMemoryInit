@@ -23,11 +23,10 @@ void MemoryInitFile::loadFile(QString filepath)
 
 QQmlListProperty<MemoryChunk> MemoryInitFile::chunks()
 {
-    return QQmlListProperty<MemoryChunk>(this, 0, &MemoryInitFile::appendToList,&MemoryInitFile::chunkCount,
-                                         &MemoryInitFile::valueAt,&MemoryInitFile::clearChunks);
+    return QQmlListProperty<MemoryChunk>(this, mChunks);
 }
 
-void MemoryInitFile::appendToList(QQmlListProperty<MemoryChunk> *list, MemoryChunk *chunk)
+/*void MemoryInitFile::appendToList(QQmlListProperty<MemoryChunk> *list, MemoryChunk *chunk)
 {
     MemoryInitFile *memoryFile = qobject_cast<MemoryInitFile*>(list->object);
     if(chunk)
@@ -49,6 +48,18 @@ int MemoryInitFile::chunkCount(QQmlListProperty<MemoryChunk> *list)
     MemoryInitFile *memoryFile = qobject_cast<MemoryInitFile*>(list->object);
     return memoryFile->mChunks.count();
 }
+
+MemoryChunk* MemoryInitFile::valueAt(QQmlListProperty<MemoryChunk> *list, int index)
+{
+    MemoryInitFile *memoryFile = qobject_cast<MemoryInitFile*>(list->object);
+    if(index > 0 && index < memoryFile->mChunks.length())
+        return memoryFile->mChunks.at(index);
+    else
+        qDebug() <<"Attempted to fetch bad memory chunk index";
+    return nullptr;
+}
+
+*/
 
 long MemoryInitFile::getAddressLong(QString & addr)
 {
@@ -182,15 +193,7 @@ QString MemoryInitFile::getValueString(long value)
     return QString::number(value,base);
 
 }
-MemoryChunk* MemoryInitFile::valueAt(QQmlListProperty<MemoryChunk> *list, int index)
-{
-    MemoryInitFile *memoryFile = qobject_cast<MemoryInitFile*>(list->object);
-    if(index > 0 && index < memoryFile->mChunks.length())
-        return memoryFile->mChunks.at(index);
-    else
-        qDebug() <<"Attempted to fetch bad memory chunk index";
-    return nullptr;
-}
+
 
 void MemoryInitFile::parseInputFile(QUrl &file)
 {
@@ -504,8 +507,9 @@ void MemoryInitFile::parseInputFile(QUrl &file)
             break;
          }
       }
-  }
 
+  }
+  emit chunksChanged(chunks());
 }
 
 

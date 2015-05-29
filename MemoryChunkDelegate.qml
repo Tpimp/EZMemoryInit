@@ -11,7 +11,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height:parent.height/4
+        height:parent.height *.35
         anchors.margins: 2
         border.color: "black"
         border.width: 2

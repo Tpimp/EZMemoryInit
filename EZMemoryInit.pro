@@ -17,7 +17,8 @@ RESOURCES += \
     qml.qrc
 
 DISTFILES += \
-    MemoryFileDialog.qml
+    MemoryFileDialog.qml \
+    MemoryChunkDelegate.qml
 
 HEADERS += \
     memorychunk.h \

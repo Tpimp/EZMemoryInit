@@ -1,9 +1,10 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>MemoryChunk.qml</file>
         <file>MemoryList.qml</file>
         <file>RomListModel.qml</file>
         <file>MemoryFileDialog.qml</file>
+        <file>ToolBar.qml</file>
+        <file>MemoryChunkDelegate.qml</file>
     </qresource>
 </RCC>

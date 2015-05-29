@@ -15,11 +15,11 @@ class MemoryChunk : public QObject
 {
     Q_OBJECT
     // declare properties to expose to Qt MOC system
-    Q_PROPERTY(QString Name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QString StartAddr READ startAddress WRITE setStartAddress NOTIFY startAddressChanged)
-    Q_PROPERTY(QString EndAddr READ endAddress WRITE setEndAddress NOTIFY endAddressChanged)
-    Q_PROPERTY(QString Purpose READ purpose WRITE setPurpose NOTIFY purposeChanged)
-    Q_PROPERTY(QString Color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString startAddress READ startAddress WRITE setStartAddress NOTIFY startAddressChanged)
+    Q_PROPERTY(QString endAddress READ endAddress WRITE setEndAddress NOTIFY endAddressChanged)
+    Q_PROPERTY(QString purpose READ purpose WRITE setPurpose NOTIFY purposeChanged)
+    Q_PROPERTY(QString color READ color WRITE setColor NOTIFY colorChanged)
     friend class MemoryInitFile;
 
 public:
@@ -79,8 +79,6 @@ private:
     QHash<long,MEMVALUE>    mData;
 
 };
-//Q_DECLARE_METATYPE(MemoryChunk)
-//qmlRegisterType<MemoryChunk>("com.memoryinit.memorychunk", 1, 0, "MemoryChunkData");
 
 
 #endif // MEMORYCHUNK_H

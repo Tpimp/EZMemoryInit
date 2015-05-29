@@ -1,5 +1,5 @@
 #include "memorychunk.h"
-
+#include "memoryinitfile.h"
 
 
 MemoryChunk::MemoryChunk(QString name, QString startaddr, QString endaddress, QString purpose, QString color)
@@ -11,6 +11,8 @@ MemoryChunk::MemoryChunk(QString name, QString startaddr, QString endaddress, QS
 void MemoryChunk::addValueAt(long address, long value, QString comment)
 {
     mData.insert(address,MEMVALUE(value,comment));
+   // MemoryInitFile* parent_ptr = reinterpret_cast<MemoryInitFile *>(parent());
+    //emit parent_ptr->addressValueAdded(address,value,comment);
 }
 
 void MemoryChunk::setColor(const QString &color)
@@ -40,6 +42,8 @@ void MemoryChunk::setStartAddress(const QString &startaddress)
 void MemoryChunk::removeValueAt(long address)
 {
     mData.remove(address);
+  // MemoryInitFile* parent_ptr = reinterpret_cast<MemoryInitFile *>(parent());
+   // emit parent_ptr->addressValueRemoved(address);
 }
 
 MemoryChunk::~MemoryChunk()

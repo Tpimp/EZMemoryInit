@@ -8,6 +8,10 @@ ApplicationWindow {
     width: 640
     height: 480
     visible: true
+    Connections{
+        target: MemoryFileEngine
+        //onNewChunkAdded
+    }
 
     menuBar: MenuBar {
         Menu {
@@ -23,6 +27,12 @@ ApplicationWindow {
                 onTriggered: Qt.quit();
             }
         }
+    }
+    ToolBar{
+        id:toolBar
+        anchors.top: parent.top
+        height:parent.height *.25
+        width: parent.width
     }
 
    MemoryList{

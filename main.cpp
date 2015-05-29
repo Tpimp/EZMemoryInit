@@ -5,6 +5,9 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    qmlRegisterType<MemoryInitFile>("MemoryInitialization",1,0,"MemoryInitFile");
+    //qmlRegisterType<QQmlListProperty<MemoryChunk>("MemoryInitialization",1,0,"MemoryAddressList");
+    qmlRegisterType<MemoryChunk>("MemoryInitialization", 1, 0, "MemoryChunk");
 
     QQmlApplicationEngine engine;
 

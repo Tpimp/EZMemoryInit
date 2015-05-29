@@ -1,0 +1,56 @@
+--Random Test ROM File for EZROMInit
+
+DEPTH = 32;                   -- The size of memory in words
+WIDTH = 8;                    -- The size of data in bits
+ADDRESS_RADIX = HEX;          -- The radix for address values
+DATA_RADIX = DEC;             -- The radix for data values
+
+CONTENT                       -- start of (address : data pairs)
+BEGIN
+%LCD CLEAR
+startAddress:"00"
+endAddress:"0F"
+purpose:"8 SPI Messages, 2 bytes long [CMD,DATA]"
+color:"blue"
+%
+00 : 0; --First Byte of LCD CLEAR
+01 : 1;
+02 : 2;
+03 : 3;
+04 : 4;
+05 : 5;
+06 : 6;
+07 : 7;
+08 : 8;
+09 : 9;
+0A : 10; --Tenth Byte of LCD CLEAR
+0B : 11;
+0C : 12;
+0D : 13;                
+0E : 14;
+0F : 15; --Last Byte of LCD CLEAR
+--END SPI CLEAR
+%LCD WRITE
+purpose:"8 SPI Messages, 2 bytes long [CMD,DATA]"
+startAddress:"10""
+color:"teal"
+endAddress:"1F"
+%
+10 : 16;
+11 : 17;
+12 : 18;
+13 : 19;
+14 : 20;
+15 : 21;
+16 : 22;
+17 : 23;
+18 : 24;
+19 : 25;
+1A : 27;
+1B : 28;
+1C : 29;
+1D : 30;
+1E : 31;
+1F : 32;
+--END SPI WRITE
+END;
