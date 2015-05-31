@@ -39,7 +39,8 @@ Rectangle {
             border.color: "black"
             Text{
                 id:startAddText
-                anchors.fill: parent
+                height:parent.height
+                anchors.centerIn: parent
                 anchors.leftMargin: 4
                 text:"Start Address: " + model.startAddress
                 color:"black"

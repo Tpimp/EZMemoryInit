@@ -44,6 +44,7 @@ ApplicationWindow {
    }
    ChunkEditorView
    {
+       id:chunkEditorView
        visible: false
    }
 

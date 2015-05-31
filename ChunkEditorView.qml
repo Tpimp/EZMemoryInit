@@ -4,12 +4,15 @@ Rectangle {
     id:chunkEditor
     anchors.fill: parent
     color:"gold"
+    property real padLength:0
     Connections{
         target: MemoryFileEngine
         onCurrentChunkChanged:{
             if(current_chunk != null)
             {
                 nameText.text = current_chunk.name
+                chunkDataList.model = current_chunk.addresses
+                padLength = current_chunk.endAddress.length
                 chunkEditor.visible = true
             }
         }
@@ -71,6 +74,74 @@ Rectangle {
         color:"lightsteelblue"
         border.color: "black"
         border.width: 2
+        Rectangle{
+            id: listHeader
+            color:"blue"
+            width: chunkDataList.width
+            height:chunkDataList.height /6
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            Row{
+                anchors.fill: parent
+                Rectangle{
+                    width:parent.width/4
+                    height:parent.height
+                    border.width: 2
+                    border.color: "white"
+                    color: "darkblue"
+                    Text{
+                        anchors.fill: parent
+                        text:"Address"
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize:  height *.7
+                    }
+                }
+                Rectangle{
+                    width:parent.width/4
+                    height:parent.height
+                    border.width: 2
+                    border.color: "white"
+                    color:"green"
+                    Text{
+                        anchors.fill: parent
+                        color:"yellow"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text:"Value"
+                        font.pixelSize:  height *.7
+                    }
+                }
+                Rectangle{
+                    width:parent.width/2
+                    height:parent.height
+                    border.width: 2
+                    border.color: "black"
+                    color:"black"
+                    Text{
+                        anchors.fill: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text:"Comment"
+                        color:"white"
+                        font.pixelSize:  height *.7
+                    }
+                }
+            }
+        }
+        ListView{
+            id:chunkDataList
+            clip:true
+            width:parent.width
+            anchors.top: listHeader.bottom
+            anchors.bottom: parent.bottom
+            delegate: ChunkDataDelegate{
+                width: chunkDataList.width
+                height:chunkDataList.height /6
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
     }
 }
 

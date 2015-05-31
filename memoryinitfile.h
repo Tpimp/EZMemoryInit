@@ -44,6 +44,10 @@ public slots:
     void loadFile(QString filepath);
     void writeFile(QString filepath);
     void setCurrentChunk(int index);
+    QString getAddressString(long addr, int pad_length = -1);
+    long getAddressLong(QString & addr);
+    QString getValueString(long value, int pad_length = -1);
+    long getValueLong(QString & value);
 private:
     QString   mName;
     QString   mDepth;
@@ -54,10 +58,6 @@ private:
     QList<MemoryChunk*>   mChunks;
     // private methods
     void parseInputFile(QUrl &file);
-    QString getAddressString(long addr);
-    long getAddressLong(QString & addr);
-    QString getValueString(long value);
-    long getValueLong(QString & value);
     /*static void appendToList(QQmlListProperty<MemoryChunk > *list, MemoryChunk * chunk);
     static MemoryChunk * valueAt(QQmlListProperty<MemoryChunk > *list, int index);
     static int   chunkCount(QQmlListProperty<MemoryChunk > *list);

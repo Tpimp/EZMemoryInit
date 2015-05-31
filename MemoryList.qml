@@ -68,6 +68,7 @@ Rectangle{
                     height: 90
                     width:parent.width
                     anchors.margins: 10
+
                 }
             }
             Rectangle{

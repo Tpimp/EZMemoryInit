@@ -61,6 +61,12 @@ MemoryChunk* MemoryInitFile::valueAt(QQmlListProperty<MemoryChunk> *list, int in
 
 */
 
+
+MemoryChunk* MemoryInitFile::currentChunk()
+{
+    return mCurrentChunk;
+}
+
 long MemoryInitFile::getAddressLong(QString & addr)
 {
     int base(10);
@@ -97,7 +103,7 @@ long MemoryInitFile::getAddressLong(QString & addr)
 
 }
 
-QString MemoryInitFile::getAddressString(long addr)
+QString MemoryInitFile::getAddressString(long addr, int pad_length)
 {
     int base(10);
     switch(mAddrRadix.at(0).toLatin1())
@@ -124,7 +130,14 @@ QString MemoryInitFile::getAddressString(long addr)
         }
         default: break;
     }
-    return QString::number(addr,base);
+    QString output_str(QString::number(addr,base));
+    if(pad_length > 0)
+        if(pad_length > output_str.length())
+        {
+            QString zero('0');
+            output_str.prepend(zero.repeated(pad_length - output_str.length()));
+        }
+    return output_str;
 
 }
 long MemoryInitFile::getValueLong(QString & value)
@@ -161,12 +174,8 @@ long MemoryInitFile::getValueLong(QString & value)
     return new_addr;
 }
 
-MemoryChunk* MemoryInitFile::currentChunk()
-{
-    return mCurrentChunk;
-}
 
-QString MemoryInitFile::getValueString(long value)
+QString MemoryInitFile::getValueString(long value, int pad_length)
 {
     int base(10);
     switch(mDataRadix.at(0).toLatin1())
@@ -193,7 +202,14 @@ QString MemoryInitFile::getValueString(long value)
         }
         default: break;
     }
-    return QString::number(value,base);
+    QString output_str(QString::number(value,base));
+    if(pad_length > 0)
+        if(pad_length > output_str.length())
+        {
+            QString zero('0');
+            output_str.prepend(zero.repeated(pad_length - output_str.length()));
+        }
+    return  output_str;
 
 }
 
@@ -616,13 +632,10 @@ void MemoryInitFile::writeFile(QString filepath)
                     ChunkData * data = chunk->mData.at(index);
                     long value(data->mValue);
                     QString comment(data->mComment);
-                    QString addr_str(getAddressString(current_address));
-                    int zeroes_to_add(length_end_addr-addr_str.length());
-                    QString zeroes('0');
-                    addr_str.prepend(zeroes.repeated(zeroes_to_add));
+                    QString addr_str(getAddressString(current_address, chunk->mEndAddr.length()));
                     buffer.append(addr_str);
                     buffer.append(" : ");
-                    QString value_str(getValueString(value));
+                    QString value_str(getValueString(value,chunk->mEndAddr.length()));
                     buffer.append(value_str);
                     buffer.append(";");
                     if(!comment.isEmpty())

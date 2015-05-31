@@ -6,9 +6,7 @@
 #include <QPair>
 #include <QtQml>
           // Data Value, USER Comment
-typedef   QPair<long,QString> MEMVALUE;
-
-Q_DECLARE_METATYPE(MEMVALUE)
+//Q_DECLARE_METATYPE(MEMVALUE)
 class MemoryInitFile;
 
 
