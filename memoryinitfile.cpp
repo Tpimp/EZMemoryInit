@@ -4,7 +4,8 @@
 #include <QFile>
 #include <QStringList>
 
-MemoryInitFile::MemoryInitFile(QObject *parent) : QObject(parent)
+MemoryInitFile::MemoryInitFile(QObject *parent) : QObject(parent),
+    mPadLength(2), mCurrentChunk(nullptr),mAddrRadix("HEX"),mDataRadix("HEX")
 {
 
 }
@@ -21,10 +22,62 @@ void MemoryInitFile::loadFile(QString filepath)
     }
 }
 
+void MemoryInitFile::addChunkDataAt(long address, long value, QString comment)
+{
+    ChunkData *data(new ChunkData(address,value,comment,mCurrentChunk));
+    if(address > mCurrentChunk->mEndAddr) // append
+    {
+        mCurrentChunk->mData.append(data);
+        mCurrentChunk->mEndAddr += 1;
+        emit mCurrentChunk->addressesChanged();
+    }
+    else
+    {   // find chunk index
+        int chunk_index(-1);
+        for(int chunks_index(0); chunks_index < mChunks.length(); chunks_index++)
+        {
+            if(mChunks.at(chunks_index)->mStartAddr == mCurrentChunk->mStartAddr)
+            {
+                chunk_index = chunks_index;
+                break;
+            }
+        }
+        if(chunk_index != -1)
+        {
+            if(address == mCurrentChunk->mStartAddr) // prepend
+            {
+                mCurrentChunk->mData.prepend(data);
+                rippleUpdateCurrent(0,chunk_index,1);
+                emit mCurrentChunk->addressesChanged();
+            }
+            else // else insert
+            {
+                // find location to insert
+                for(int index(0); index < mCurrentChunk->mData.length(); index++)
+                {
+                    ChunkData * data_at(mCurrentChunk->mData.at(index));
+                    if(data_at->mAddress > address )
+                    {
+                       int insert_at (index-1);
+                       mCurrentChunk->mData.insert(insert_at,data);
+                       rippleUpdateCurrent(index,chunk_index, 1);
+                       emit mCurrentChunk->addressesChanged();
+                       break;
+                    }
+                }
+            }
+
+        }// else chunk not found
+    }
+}
+
 QQmlListProperty<MemoryChunk> MemoryInitFile::chunks()
 {
     return QQmlListProperty<MemoryChunk>(this, mChunks);
 }
+
+
+
 
 /*void MemoryInitFile::appendToList(QQmlListProperty<MemoryChunk> *list, MemoryChunk *chunk)
 {
@@ -62,12 +115,65 @@ MemoryChunk* MemoryInitFile::valueAt(QQmlListProperty<MemoryChunk> *list, int in
 */
 
 
+void MemoryInitFile::chunkEndAddressChange(long new_end_address)
+{
+    if( mCurrentChunk->mEndAddr != new_end_address)
+    {
+        mCurrentChunk->mEndAddr = new_end_address;
+        emit endAddressChanged(new_end_address);
+    }
+
+}
+
+
 MemoryChunk* MemoryInitFile::currentChunk()
 {
     return mCurrentChunk;
 }
 
-long MemoryInitFile::getAddressLong(QString & addr)
+void MemoryInitFile::rippleUpdateCurrent(int start_index, int chunk_index, int value)
+{
+    if(chunk_index != 0)
+        mCurrentChunk->setStartAddress(mCurrentChunk->mStartAddr + value);
+    mCurrentChunk->setEndAddress(mCurrentChunk->mEndAddr + value);
+    ChunkData *   current_data(nullptr);
+    for(int index(start_index); index < mCurrentChunk->mData.length(); index++)
+    {
+        current_data = mCurrentChunk->mData.at(index);
+        current_data->setAddress(current_data->mAddress + value);
+    }
+    emit endAddressChanged(mCurrentChunk->mEndAddr);
+}
+
+void MemoryInitFile::rippleUpdateAddresses(int start_index, int chunk_index, int value)
+{
+    if(chunk_index < mChunks.length())
+    {
+        MemoryChunk * current_chunk = mChunks.at(chunk_index);
+        if(chunk_index != 0)
+            current_chunk->setStartAddress(current_chunk->mStartAddr + value);
+        current_chunk->setEndAddress(current_chunk->mEndAddr + value);
+        ChunkData *   current_data(nullptr);
+        for(int index(start_index); index < current_chunk->mData.length(); index++)
+        {
+            current_data = current_chunk->mData.at(index);
+            current_data->setAddress(current_data->mAddress + value);
+        }
+        rippleUpdateAddresses(0, chunk_index+1,value);
+    }
+}
+
+void MemoryInitFile::discardChangesToCurrentChunk()
+{
+    if(mCurrentChunk)
+    {
+        delete mCurrentChunk;
+        mCurrentChunk = nullptr;
+        emit currentChunkChanged(mCurrentChunk);
+    }
+}
+
+long MemoryInitFile::getAddressLong(QString  addr)
 {
     int base(10);
     switch(mAddrRadix.at(0).toLatin1())
@@ -140,7 +246,7 @@ QString MemoryInitFile::getAddressString(long addr, int pad_length)
     return output_str;
 
 }
-long MemoryInitFile::getValueLong(QString & value)
+long MemoryInitFile::getValueLong(QString  value)
 {
     int base(10);
     switch(mDataRadix.at(0).toLatin1())
@@ -214,6 +320,7 @@ QString MemoryInitFile::getValueString(long value, int pad_length)
 }
 
 
+
 void MemoryInitFile::parseInputFile(QUrl &file)
 {
   QString file_path(file.toLocalFile());
@@ -240,6 +347,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
       {
         case NAME:{
             mName = current_line.replace("--","");
+            emit fileNameChanged(mName);
             current_state = HEADER;
             break;
         }
@@ -259,12 +367,13 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                                 QString depth_value(depth_list.at(1));
                                 depth_value = depth_value.replace(" ","");
                                 depth_value = depth_value.split(";")[0];
-
                                 mDepth = depth_value;
+                                emit memoryDepthChanged(mDepth);
                                 got_depth = true;
                             }
                             else
                             {
+                                errored = true;
                                 qDebug() << "Looking for Header [Depth] and found " << current_line;
                             }
                         }
@@ -279,16 +388,19 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                                 d_radix_value = d_radix_value.replace(" ","");
                                 d_radix_value = d_radix_value.split(";")[0];
                                 mDataRadix = d_radix_value;
+                                emit dataRadixChanged(mDataRadix);
                                 got_dradix = true;
                             }
                             else
                             {
+                                errored = true;
                                 qDebug() << "Looking for  Header [DATA_RADIX] and found " << current_line;
 
                             }
                         }
                         else
                         {
+                            errored = true;
                             qDebug() << "Looking for  Header [D] and found " << current_line;
                         }
                         break;
@@ -303,10 +415,12 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                             width_value = width_value.replace(" ","");
                             width_value = width_value.split(";")[0];
                             mWidth = width_value;
+                            emit memoryWidthChanged(mWidth);
                             got_width = true;
                         }
                         else
                         {
+                            errored = true;
                             qDebug() << "Looking for  Header [WIDTH] and found " << current_line;
                         }
                         break;
@@ -321,10 +435,12 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                             a_radix_value = a_radix_value.replace(" ","");
                             a_radix_value = a_radix_value.split(";")[0];
                             mAddrRadix = a_radix_value;
+                            emit addressRadixChanged(mAddrRadix);
                             got_aradix = true;
                         }
                         else
                         {
+                            errored = true;
                             qDebug() << "Looking for  Header [ADDRESS_RADIX] and found " << current_line;
                         }
                         break;
@@ -347,6 +463,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                     {
                         if(current_line.compare("BEGIN")== 0)
                         {
+                            errored = true;
                             qDebug() << "Error found BEGIN before received all HEADER info, and before CONTENT found";
                             mName = "";
                             mWidth = "";
@@ -398,11 +515,12 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                 if(current_line.at(0).toLatin1() == '%')
                 {
                     current_state = CHUNK_HEADER;
-                    current_chunk = new MemoryChunk();
+                    current_chunk = new MemoryChunk("",0,0,"","black",this);
                     current_chunk->setName(current_line.replace("%",""));
                 }
                 else
                 {
+                    errored = true;
                     qDebug() << "Looking for Chunk Header and found " << current_line;
                 }
             }
@@ -426,10 +544,13 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         QString start_address(start_addr_list.at(1));
                         start_address = start_address.section("\"",0,1);
                         start_address.replace("\"","");
-                        current_chunk->setStartAddress(start_address);
+                        current_chunk->setStartAddress(getAddressLong(start_address));
                     }
                     else
+                    {
+                        errored = true;
                         qDebug() << "No Start Address. @ Line: " << index;
+                    }
                     break;
                 }
                 case 'e':
@@ -441,10 +562,15 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         QString end_address(end_addr_list.at(1));
                         end_address = end_address.section("\"",0,1);
                         end_address.replace("\"","");
-                        current_chunk->setEndAddress(end_address);
+                        if(end_address.length() > mPadLength)
+                            mPadLength = end_address.length();
+                        current_chunk->setEndAddress(getAddressLong(end_address));
                     }
                     else
+                    {
+                        errored = true;
                         qDebug() << "No End Address. @ Line: " << index;
+                    }
                     break;
                 }
                 case 'p':
@@ -458,7 +584,10 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         current_chunk->setPurpose(purpose);
                     }
                     else
+                    {
+                        errored = true;
                         qDebug() << "No Purpose. @ Line: " << index;
+                    }
                     break;
                 }
                 case 'c':
@@ -472,10 +601,14 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                         current_chunk->setColor(color);
                     }
                     else
+                    {
+                        errored = true;
                         qDebug() << "No Color. @ Line: " << index;
+                    }
                     break;
                 }
-                default: qDebug() << "Invalid Chunk Header Item. @ Line: " << current_line;
+                default:
+                errored = true; qDebug() << "Invalid Chunk Header Item. @ Line: " << current_line;
             }
             break;
          }
@@ -513,6 +646,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
                 }
                 else
                 {
+                    errored = true;
                     qDebug() << "Bad Memory Value parsed @ Line: " << index;
                 }
             }
@@ -524,6 +658,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
          }
          default:
          {
+            errored = true;
             qDebug() << "Invalid line parsed " << current_line;
             break;
          }
@@ -532,25 +667,88 @@ void MemoryInitFile::parseInputFile(QUrl &file)
   }
   if(!errored)
   {
-
       QString filename(file_path);
       int last_index(filename.lastIndexOf(QDir::separator()));
       filename.remove(0,last_index+1);
       emit fileLoadedSuccesfully(filename);
-      emit chunksChanged(chunks());
+      emit chunksChanged();
   }
+}
+
+
+void MemoryInitFile::removeChunkAt(long address)
+{
+    mCurrentChunk->removeValueAt(address);
+}
+
+void MemoryInitFile::saveChangesToCurrentChunk(int index)
+{
+    if(mCurrentChunk) // replace old with current
+    {
+        MemoryChunk * chunk(nullptr);
+        if(mChunks.length()> index && index >= 0)
+        {
+            chunk = mChunks.takeAt(index);
+        }
+        if(chunk)
+        {
+            mChunks.insert(index,mCurrentChunk);
+            long address_difference(mCurrentChunk->mEndAddr - chunk->mEndAddr);
+            rippleUpdateAddresses(0,index+1,int(address_difference));
+            mCurrentChunk = nullptr;
+            delete chunk;
+            emit chunksChanged();
+        }
+        else
+        {
+            qDebug() << "Warning: Could not find existing chunk???";
+            mChunks.insert(index,mCurrentChunk);
+            emit chunksChanged();
+        }
+    }
 }
 
 void MemoryInitFile::setCurrentChunk(int index)
 {
     MemoryChunk * chunk(nullptr);
-    if(mChunks.length()> index && index >= 0)
-        chunk = mChunks.at(index);
-    if(mCurrentChunk != chunk)
+    if(index < 0)
     {
-        mCurrentChunk = chunk;
-        emit currentChunkChanged(chunk);
+        if(mCurrentChunk)
+        {
+            delete mCurrentChunk;
+            mCurrentChunk = nullptr;
+            emit currentChunkChanged(mCurrentChunk);
+        }
     }
+    else
+    {
+        if(mChunks.length()> index && index >= 0)
+            chunk = mChunks.at(index);
+        if(mCurrentChunk != chunk)
+        {
+            mCurrentChunk = new MemoryChunk(chunk->mName,chunk->mStartAddr,chunk->mEndAddr,chunk->mPurpose,chunk->mColor,this);
+            mCurrentChunk->deepCopyDataChunks(chunk);
+            //mCurrentChunk = chunk;
+            emit currentChunkChanged(mCurrentChunk);
+        }
+    }
+}
+
+
+void MemoryInitFile::setCurrentChunkColor(QString color)
+{
+    mCurrentChunk->mColor = color;
+}
+
+
+void MemoryInitFile::setCurrentChunkName(QString name)
+{
+    mCurrentChunk->mName = name;
+}
+
+void MemoryInitFile::setCurrentChunkPurpose(QString purpose)
+{
+    mCurrentChunk->mPurpose = purpose;
 }
 
 void MemoryInitFile::writeFile(QString filepath)
@@ -569,8 +767,6 @@ void MemoryInitFile::writeFile(QString filepath)
     }
     if(generate_file)
     {
-
-
         QFile  output_file(converted_file_path);
         output_file.setFileName(converted_file_path);
         qDebug() << "Set filename to " << output_file.fileName();
@@ -619,9 +815,10 @@ void MemoryInitFile::writeFile(QString filepath)
             // write header (buffered)
             output_file.write(buffer);
             // assume sequential block of data (or issues with data)
-            long current_address(getAddressLong(chunk->mStartAddr));
-            long end_address(getAddressLong(chunk->mEndAddr));
-            int length_end_addr(chunk->mEndAddr.length());
+            long current_address(chunk->mStartAddr);
+            long end_address(chunk->mEndAddr);
+            QString end_addr_str(getAddressString(chunk->mEndAddr));
+            int length_end_addr(end_addr_str.length());
             int index;
             while(current_address <= end_address)
             {
@@ -632,10 +829,10 @@ void MemoryInitFile::writeFile(QString filepath)
                     ChunkData * data = chunk->mData.at(index);
                     long value(data->mValue);
                     QString comment(data->mComment);
-                    QString addr_str(getAddressString(current_address, chunk->mEndAddr.length()));
+                    QString addr_str(getAddressString(current_address, length_end_addr));
                     buffer.append(addr_str);
                     buffer.append(" : ");
-                    QString value_str(getValueString(value,chunk->mEndAddr.length()));
+                    QString value_str(getValueString(value,length_end_addr));
                     buffer.append(value_str);
                     buffer.append(";");
                     if(!comment.isEmpty())

@@ -2,8 +2,8 @@
 #include "memoryinitfile.h"
 
 
-MemoryChunk::MemoryChunk(QString name, QString startaddr, QString endaddress, QString purpose, QString color)
-    : QObject(nullptr), mName(name), mStartAddr(startaddr), mEndAddr(endaddress), mPurpose(purpose), mColor(color)
+MemoryChunk::MemoryChunk(QString name, long startaddr, long endaddress, QString purpose, QString color, QObject * parent)
+    : QObject(parent), mName(name), mStartAddr(startaddr), mEndAddr(endaddress), mPurpose(purpose), mColor(color)
 {
 
 }
@@ -38,12 +38,28 @@ bool MemoryChunk::containsAddress(long address, int &index)
         index = -1;
     return found;
 }
+
+void MemoryChunk::deepCopyDataChunks(MemoryChunk *chunkToCopy)
+{
+    foreach(ChunkData * data, chunkToCopy->mData)
+    {
+        ChunkData * temp = new ChunkData(data->mAddress,data->mValue, data->mComment,this);
+        this->mData.append(temp);
+    }
+}
+
+QQmlListProperty<ChunkData> MemoryChunk::getNullList()
+{
+     QList<ChunkData*> null_list;
+     return QQmlListProperty<ChunkData>(this,null_list);
+}
+
 void MemoryChunk::setColor(const QString &color)
 {
     mColor = color;
 }
 
-void MemoryChunk::setEndAddress(const QString &endaddress)
+void MemoryChunk::setEndAddress(long endaddress)
 {
     mEndAddr = endaddress;
 }
@@ -57,14 +73,16 @@ void MemoryChunk::setPurpose(const QString &purpose)
     mPurpose = purpose;
 }
 
-void MemoryChunk::setStartAddress(const QString &startaddress)
+void MemoryChunk::setStartAddress(long startaddress)
 {
     mStartAddr = startaddress;
 }
 
-void MemoryChunk::removeValueAt(long address)
+bool MemoryChunk::removeValueAt(long address)
 {
     ChunkData * ptr(nullptr);
+    bool removed(false);
+    int index(0);
     foreach(ChunkData * data, mData)
     {
         if(data->mAddress == address)
@@ -72,16 +90,29 @@ void MemoryChunk::removeValueAt(long address)
             ptr = data;
             break;
         }
+        index++;
     }
     if(ptr)
     {
-        mData.removeOne(ptr);
-        delete ptr;
+        ptr = mData.takeAt(index);
+        ptr->deleteLater();
+        removed = true;
+        while(index < mData.length())
+        {
+            ptr = mData.at(index);
+            ptr->mAddress -= 1;
+            index++;
+        }
+        if(mEndAddr != 0)
+            mEndAddr -= 1;
+        emit addressesChanged();
+        emit endAddressChanged(mEndAddr);
     }
     else
     {
         qDebug() << "Did not find memory data for address: " << address;
     }
+    return removed;
 }
 
 MemoryChunk::~MemoryChunk()
@@ -91,5 +122,6 @@ MemoryChunk::~MemoryChunk()
        ChunkData * ptr(mData.takeFirst());
        delete ptr;
     }
+    mData.clear();
 }
 

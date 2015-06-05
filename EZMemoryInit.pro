@@ -4,7 +4,9 @@ QT += qml quick widgets
 
 SOURCES += main.cpp \
     memorychunk.cpp \
-    memoryinitfile.cpp
+    memoryinitfile.cpp \
+    addressvalidator.cpp \
+    valuevalidator.cpp
 
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
@@ -22,6 +24,8 @@ DISTFILES += \
 
 HEADERS += \
     memorychunk.h \
-    memoryinitfile.h
+    memoryinitfile.h \
+    addressvalidator.h \
+    valuevalidator.h
 
 CONFIG += c++11

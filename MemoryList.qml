@@ -14,6 +14,44 @@ Rectangle{
     property real   memoryWidth: 0
     property real   memoryDepth: 32
     property alias  fileName:fileText.text
+    property QtObject chunkList:null
+    function openFileList()
+    {
+        chunkListLoader.active = true;
+        chunkList.model = MemoryFileEngine.chunks
+    }
+    function closeFileList()
+    {
+        chunkListLoader.active = false;
+    }
+
+    Connections{
+        target:MemoryFileEngine
+        onEndAddressChanged:{
+            closeFileList()
+            openFileList()
+        }
+        onChunksChanged:{
+            closeFileList()
+            openFileList()
+        }
+        onAddressRadixChanged: {
+        }
+        onDataRadixChanged:{
+
+        }
+        onFileNameChanged:{
+            fileText.text = name
+        }
+        onMemoryDepthChanged:{
+            depthText.text = depth
+        }
+        onMemoryWidthChanged:{
+            widthText.text = width
+        }
+
+    }
+
     Rectangle
     {
         id:fileNameBar
@@ -46,7 +84,6 @@ Rectangle{
         height: parent.height *.95 - fileNameBar.height
         Rectangle
         {
-
             id: listContainer
             border.width: 2
             border.color: "black"
@@ -55,22 +92,6 @@ Rectangle{
             width:parent.width/2
             height:parent.height
             radius: 16
-            ListView{
-                id:chunkList
-                width: parent.width
-                anchors.top:listHeader.bottom
-                anchors.topMargin:4
-                height: parent.height - listHeader.height
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: parent.height * .01
-                model:MemoryFileEngine.chunks
-                delegate:MemoryChunkDelegate{
-                    height: 90
-                    width:parent.width
-                    anchors.margins: 10
-
-                }
-            }
             Rectangle{
                 id:listHeader
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -78,11 +99,12 @@ Rectangle{
                 color:"darkblue"
                 border.color: "black"
                 border.width:2
-                height:chunkList.height/8
-                width:chunkList.width
+                height:chunkListLoader.height/8
+                width:chunkListLoader.width
                 radius:4
                 Text{
-                    anchors.fill: parent
+                    height: parent.height
+                    width: parent.width
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text:"Memory Chunks In File"
@@ -91,6 +113,26 @@ Rectangle{
                 }
 
             }
+            Loader{
+                id: chunkListLoader
+                width: parent.width
+                anchors.top:listHeader.bottom
+                anchors.topMargin:4
+                height: parent.height - listHeader.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                sourceComponent:chunkListComponent
+                onLoaded:{
+                    chunkList = item
+                    chunkListLoader.visible = true
+                }
+                onActiveChanged: {
+                    chunkListLoader.visible = active
+                    if(!active)
+                        chunkList = null
+                }
+            }
+
+
         }
         Rectangle{
             id: controlList
@@ -127,7 +169,7 @@ Rectangle{
                         TextField{
                             id: depthText
                             anchors.fill: parent
-                            validator: IntValidator{bottom:1;top:99999;}
+                            validator: IntValidator{bottom:1;top:65536;}
                             placeholderText: "32"
                             text:""
                             anchors.margins: 1
@@ -137,12 +179,14 @@ Rectangle{
                             onTextChanged: {
                                 if(text.length > 0)
                                 {
-                                    memoryDepth = text;
+                                    memoryDepth = Number(text);
                                 }
                                 else
                                 {
-                                    memoryDepth = placeholderText;
+                                    memoryDepth = Number(placeholderText);
                                 }
+                                AddressValidator.maxAddress = memoryDepth
+                                endAddressText.text = MemoryFileEngine.getAddressString(memoryDepth, MemoryFileEngine.padLength)
                             }
                         }
                     }
@@ -168,7 +212,7 @@ Rectangle{
                         TextField{
                             id:widthText
                             anchors.fill: parent
-                            validator: IntValidator{bottom:1;top:999;}
+                            validator: IntValidator{bottom:1;top:32;}
                             placeholderText: "8"
                             text:""
                             anchors.margins: 1
@@ -333,10 +377,13 @@ Rectangle{
                         border.width: 1
                         TextField{
                             id:endAddressText
-                            anchors.fill: parent
+                            anchors.centerIn: parent
+                            height:parent.height
+                            width: parent.width
                             readOnly:true
-                            placeholderText: "0x20"
+                            placeholderText: "20"
                             text:""
+                            validator:AddressValidator
                             anchors.margins: 1
                             horizontalAlignment: TextInput.AlignHCenter
                             verticalAlignment: TextInput.AlignVCenter
@@ -357,6 +404,18 @@ Rectangle{
             }
         }
         spacing:parent.height*.05
+    }
+    Component{
+        id:chunkListComponent
+        ListView{
+            anchors.fill:parent
+            spacing: parent.height * .01
+            delegate:MemoryChunkDelegate{
+                height: 90
+                width:parent.width
+                anchors.margins: 10
+            }
+        }
     }
 
 }

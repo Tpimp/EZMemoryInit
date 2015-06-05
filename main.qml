@@ -1,7 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Controls 1.3
 import QtQuick.Window 2.2
-import QtQuick.Dialogs 1.2
+//import QtQuick.Dialogs 1.2
 
 ApplicationWindow {
     title: qsTr("EZ Memory Init")
@@ -11,7 +11,7 @@ ApplicationWindow {
     Connections{
         target: MemoryFileEngine
         onFileLoadedSuccesfully:{
-            memoryFileInfo.fileName = filename
+            memoryList.fileName = filename
         }
     }
 
@@ -38,7 +38,7 @@ ApplicationWindow {
     }
 
    MemoryList{
-       id: memoryFileInfo
+       id:memoryList
        color: "#0051ff"
 
    }
@@ -55,7 +55,7 @@ ApplicationWindow {
        }
    }
 
-    MessageDialog {
+    /*MessageDialog {
         id: messageDialog
         title: qsTr("May I have your attention, please?")
 
@@ -63,5 +63,5 @@ ApplicationWindow {
             messageDialog.text = caption;
             messageDialog.open();
         }
-    }
+    }*/
 }

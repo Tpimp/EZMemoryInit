@@ -8,5 +8,8 @@
         <file>MemoryChunkDelegate.qml</file>
         <file>ChunkEditorView.qml</file>
         <file>ChunkDataDelegate.qml</file>
+        <file>ChunkEditBar.qml</file>
+        <file>remove.png</file>
+        <file>Dialog.qml</file>
     </qresource>
 </RCC>

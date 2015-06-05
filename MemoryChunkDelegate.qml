@@ -6,6 +6,7 @@ Rectangle {
     radius:16
     border.width: 2
     border.color: "black"
+
     Rectangle{
         id:nameBar
         anchors.top: parent.top
@@ -42,7 +43,7 @@ Rectangle {
                 height:parent.height
                 anchors.centerIn: parent
                 anchors.leftMargin: 4
-                text:"Start Address: " + model.startAddress
+                text:"Start Address: " + MemoryFileEngine.getAddressString(model.startAddress,MemoryFileEngine.padLength)
                 color:"black"
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: height *.7
@@ -57,9 +58,9 @@ Rectangle {
             border.color: "black"
             Text{
                 id:endAddText
-                anchors.fill: parent
+                height: parent.height
                 anchors.leftMargin: 4
-                text:"End Address: " + model.endAddress
+                text:"End Address: " +  MemoryFileEngine.getAddressString(model.endAddress,MemoryFileEngine.padLength)
                 color:"black"
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: height *.7
@@ -89,6 +90,8 @@ Rectangle {
         MouseArea{
             anchors.fill: parent
             onClicked:{
+                chunkEditorView.currentIndex = index
+                chunkEditorView.openViewer()
                 MemoryFileEngine.setCurrentChunk(index);
             }
         }
