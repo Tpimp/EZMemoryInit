@@ -87,13 +87,14 @@ Rectangle {
                     anchors.top: parent.top
                     text: MemoryFileEngine.getValueString(model.value, MemoryFileEngine.padLength)
                     color:"yellow"
-                    validator:RegExpValidator{
-                        regExp: /[0-9abcdef]+/
-                    }
+                    validator:ValueValidator
 
                     horizontalAlignment:  TextInput.AlignLeft
                     verticalAlignment: TextInput.AlignVCenter
                     onCursorPositionChanged: flickableText1.ensureVisible(cursorRectangle)
+                    onTextChanged: {
+                            currentChunk.updateValueAt(model.address,text,model.comment)
+                    }
                 }
             }
         }
@@ -135,6 +136,9 @@ Rectangle {
                     horizontalAlignment: TextInput.AlignLeft
                     verticalAlignment: TextInput.AlignVCenter
                     onCursorPositionChanged: flickableText.ensureVisible(cursorRectangle)
+                    onTextChanged: {
+                            currentChunk.updateValueAt(model.address,model.value,text)
+                    }
                 }
             }
 

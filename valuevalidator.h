@@ -19,7 +19,9 @@ public:
 
 private:
     MemoryInitFile * mFileEngine;
-    QRegExp     mExpression;
+    QRegExp     mHexExpression;
+    QRegExp     mBinExpression;
+    QRegExp     mDecExpression;
     long mMaxValue;
     long mMinValue;
 

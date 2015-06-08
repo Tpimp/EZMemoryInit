@@ -11,5 +11,15 @@
         <file>ChunkEditBar.qml</file>
         <file>remove.png</file>
         <file>Dialog.qml</file>
+        <file>AddChunkDialog.qml</file>
+        <file>AddDataDialog.qml</file>
+        <file>AddDataDialogComponent.qml</file>
+        <file>AddChunkDialogComponent.qml</file>
+        <file>ColorPicker/CheckerBoard.qml</file>
+        <file>ColorPicker/ColorPicker.qml</file>
+        <file>ColorPicker/ColorSlider.qml</file>
+        <file>ColorPicker/NumberBox.qml</file>
+        <file>ColorPicker/PanelBorder.qml</file>
+        <file>ColorPicker/SBPicker.qml</file>
     </qresource>
 </RCC>

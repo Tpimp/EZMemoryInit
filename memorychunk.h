@@ -139,7 +139,7 @@ public slots:
     void setColor(const QString & color);
     void addValueAt(long address, long value, QString comment);
     bool removeValueAt(long address);
-
+    void updateValueAt(long address, long value, QString comment);
 private:
     // Header information
     QString   mName;

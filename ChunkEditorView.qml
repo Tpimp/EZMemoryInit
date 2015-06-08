@@ -7,6 +7,23 @@ Rectangle {
     property var  currentChunk:null
     property real currentIndex: -1
     property QtObject chunkDataList:null
+    Text{
+        id:colorText
+        font.pixelSize: parent.height *.02
+        onTextChanged: {
+            MemoryFileEngine.setCurrentChunkColor(text)
+        }
+    }
+
+    MouseArea{
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: dataContainer.top
+        onClicked:{
+            colorPickerContainer.openColorPicker(chunkEditor,colorText)
+        }
+    }
 
     function openViewer(){
         chunkEditor.visible = true
@@ -38,9 +55,10 @@ Rectangle {
     }
     function openAddDialog()
     {
-        if(!addDialog.visible)
+        if(!addDataDialog.visible)
         {
-            addDialog.openDialog(currentChunk.startAddress,0, "Put Comment Here")
+            //addDataDialog.openDialog()
+            addDataDialog.openDialog()
         }
     }
 
@@ -51,6 +69,7 @@ Rectangle {
             {
                 currentChunk = current_chunk
                 nameText.text = current_chunk.name
+                colorText.text = currentChunk.color
                 chunkConnections.target = current_chunk
                 chunkDataList.model = current_chunk.addresses
                 chunkEditor.color = currentChunk.color
@@ -250,19 +269,18 @@ Rectangle {
                 }
             }
         }
-        Loader{
-            id:chunkDataListLoader
-            sourceComponent: dataListComponent
-            active:false
-            clip:true
-            width:parent.width
-            anchors.top: listHeader.bottom
-            anchors.bottom: parent.bottom
-            onLoaded: {
-                chunkDataList = item
+            Loader{
+                id:chunkDataListLoader
+                sourceComponent: dataListComponent
+                active:false
+                clip:true
+                width:parent.width
+                anchors.top: listHeader.bottom
+                anchors.bottom: parent.bottom
+                onLoaded: {
+                    chunkDataList = item
+                }
             }
-        }
-
     }
     ChunkEditBar{
         id:actionBar
@@ -275,17 +293,17 @@ Rectangle {
     }
     Component{
         id:dataListComponent
-        ListView{
-            anchors.fill: parent
-            delegate: ChunkDataDelegate{
-                width: chunkDataList.width
-                height:chunkDataList.height /6
-                anchors.horizontalCenter: parent.horizontalCenter
+            ListView{
+                anchors.fill: parent
+                delegate: ChunkDataDelegate{
+                    width: chunkDataList.width
+                    height:chunkDataList.height /6
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
             }
-        }
     }
-    Dialog{
-        id:addDialog
+    AddDataDialog{
+        id:addDataDialog
         visible:false
         height:parent.height/2
         width:parent.width/2
@@ -293,6 +311,7 @@ Rectangle {
         anchors.bottom:actionBar.top
         b1Text.text: "Insert"
         b2Text.text:"Cancel"
+
     }
 
 }

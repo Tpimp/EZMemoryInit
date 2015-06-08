@@ -38,6 +38,7 @@ Rectangle {
             radius:2
             border.width: 1
             border.color: "black"
+            clip:true
             Text{
                 id:startAddText
                 height:parent.height
@@ -47,7 +48,7 @@ Rectangle {
                 color:"black"
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: height *.7
-                width: (text.length * (font.pixelSize-1))
+                width: (text.length * (font.pixelSize *.52))
             }
         }
         Rectangle{
@@ -56,6 +57,7 @@ Rectangle {
             radius:2
             border.width: 1
             border.color: "black"
+            clip:true
             Text{
                 id:endAddText
                 height: parent.height
@@ -64,7 +66,7 @@ Rectangle {
                 color:"black"
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: height *.7
-                width: (text.length * (font.pixelSize-1))
+                width: (text.length * (font.pixelSize*.52))
             }
         }
     }

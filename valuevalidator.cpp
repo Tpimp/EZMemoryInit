@@ -8,29 +8,107 @@ ValueValidator::ValueValidator(MemoryInitFile *memory_file, QObject *parent)
 
 void ValueValidator::setRegExpression(QRegExp &expression)
 {
-    mExpression = expression;
+    mHexExpression = expression;
 }
 
 QValidator::State ValueValidator::validate(QString &input, int &pos) const
 {
-    if(mExpression.exactMatch(input))
+    QString format(mFileEngine->getValueRadix());
+    switch(format.at(0).toLatin1())
     {
-        if(input.isEmpty())
+        case 'H': // HEX
         {
-            input = "0";
-            return QValidator::Acceptable;
+            if(mHexExpression.exactMatch(input))
+            {
+                if(input.isEmpty())
+                {
+                    input = "0";
+                    return QValidator::Acceptable;
+                }
+                long width(mFileEngine->getWidth().toLong());
+                long max_value = (1 << width)-1;
+                long value = mFileEngine->getValueLong(input);
+                if(value < max_value)
+                {
+                    return QValidator::Acceptable;
+                }
+                else
+                {
+                   return QValidator::Invalid;
+                }
+            }
+            break;
         }
-        long width(mFileEngine->getWidth().toLong());
-        long max_value = (1 << width);
-        long value = mFileEngine->getValueLong(input);
-        if(value <= max_value)
+        case 'D': // Decimal
         {
-            return QValidator::Acceptable;
+            if(mHexExpression.exactMatch(input))
+            {
+                if(input.isEmpty())
+                {
+                    input = "0";
+                    return QValidator::Acceptable;
+                }
+                long width(mFileEngine->getWidth().toLong());
+                long max_value = (1 << width)-1;
+                long value = mFileEngine->getValueLong(input);
+                if(value < max_value)
+                {
+                    return QValidator::Acceptable;
+                }
+                else
+                {
+                   return QValidator::Invalid;
+                }
+            }
+            break;
         }
-        else
+        case 'U': // Decimal
         {
-           return QValidator::Invalid;
+            if(mHexExpression.exactMatch(input))
+            {
+                if(input.isEmpty())
+                {
+                    input = "0";
+                    return QValidator::Acceptable;
+                }
+                long width(mFileEngine->getWidth().toLong());
+                long max_value = (1 << width)-1;
+                long value = mFileEngine->getValueLong(input);
+                if(value < max_value)
+                {
+                    return QValidator::Acceptable;
+                }
+                else
+                {
+                   return QValidator::Invalid;
+                }
+            }
+            break;
         }
+        case 'O': // Decimal
+        {
+            if(mHexExpression.exactMatch(input))
+            {
+                if(input.isEmpty())
+                {
+                    input = "0";
+                    return QValidator::Acceptable;
+                }
+                long width(mFileEngine->getWidth().toLong());
+                long max_value = (1 << width)-1;
+                long value = mFileEngine->getValueLong(input);
+                if(value < max_value)
+                {
+                    return QValidator::Acceptable;
+                }
+                else
+                {
+                   return QValidator::Invalid;
+                }
+            }
+            break;
+        }
+        default: break;
     }
     return QValidator::Invalid;
 }

@@ -4,6 +4,7 @@ import QtQuick.Controls.Styles 1.3
 import MemoryInitialization 1.0
 
 Rectangle{
+    id:memList
     anchors.centerIn: parent
     anchors.fill: parent
     color:"white"
@@ -185,8 +186,11 @@ Rectangle{
                                 {
                                     memoryDepth = Number(placeholderText);
                                 }
-                                AddressValidator.maxAddress = memoryDepth
-                                endAddressText.text = MemoryFileEngine.getAddressString(memoryDepth, MemoryFileEngine.padLength)
+                                MemoryFileEngine.memoryDepth = memoryDepth
+                                AddressValidator.maxAddress = (memoryDepth-1)
+                                endAddressText.text = MemoryFileEngine.getAddressString(AddressValidator.maxAddress, MemoryFileEngine.padLength)
+                                memList.endAddress = MemoryFileEngine.getAddressString(AddressValidator.maxAddress, MemoryFileEngine.padLength)
+                                MemoryFileEngine.lastAddress = memList.endAddress
                             }
                         }
                     }
@@ -227,7 +231,9 @@ Rectangle{
                                 else
                                 {
                                     memoryWidth = placeholderText;
+
                                 }
+                                MemoryFileEngine.memoryWidth = memoryWidth
                             }
                         }
                     }
@@ -270,6 +276,10 @@ Rectangle{
                                     text: control.currentText
                                 }
                             }
+                            onCurrentTextChanged: {
+                                MemoryFileEngine.addressRadix = currentText
+                            }
+
                             model:["HEX","DEC","OCT","BIN","UNS"]
                         }
                     }
@@ -311,6 +321,9 @@ Rectangle{
                                     text: control.currentText
                                 }
                             }
+                            onCurrentTextChanged: {
+                                MemoryFileEngine.dataRadix = currentText
+                            }
                             model:["HEX","DEC","OCT","BIN","UNS"]
 
                         }
@@ -337,13 +350,14 @@ Rectangle{
                         TextField{
                             id:startAddressText
                             anchors.fill: parent
-                            validator: IntValidator{bottom:1;top:999;}
-                            placeholderText: "0x00"
+                            validator:AddressValidator
+                            placeholderText: "00"
                             text:""
                             anchors.margins: 1
                             horizontalAlignment: TextInput.AlignHCenter
                             verticalAlignment: TextInput.AlignVCenter
                             font.pixelSize: height *.75
+
                             onTextChanged: {
                                 if(text.length > 0)
                                 {
@@ -391,12 +405,41 @@ Rectangle{
                             onTextChanged: {
                                 if(text.length > 0)
                                 {
-                                    startAddress = text;
+                                    endAddress = text;
                                 }
                                 else
                                 {
-                                    startAddress = placeholderText;
+                                    endAddress = placeholderText;
                                 }
+                            }
+                        }
+                    }
+                }
+                Row{
+                    anchors.left: parent.left
+                    anchors.right:parent.right
+                    height:parent.height/10
+                    anchors.leftMargin: 6
+
+                    Rectangle{
+                        width:parent.width
+                        height: parent.height
+                        border.color: "black"
+                        border.width: 1
+                        Text{
+                            id: textBox
+                            text:"Insert Chunk"
+                            anchors.fill: parent
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            height: parent.height
+                            font.pixelSize: (width/text.length) + 4
+                            color:"black"
+                        }
+                        MouseArea{
+                            anchors.fill: parent
+                            onClicked: {
+                                chunkDialog.openDialog()
                             }
                         }
                     }

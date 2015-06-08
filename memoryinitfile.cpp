@@ -71,12 +71,48 @@ void MemoryInitFile::addChunkDataAt(long address, long value, QString comment)
     }
 }
 
+void MemoryInitFile::addMemoryChunkAt(long start_address, long end_address, QString name, QString purpose, QString color)
+{
+    MemoryChunk  * memchunk(new MemoryChunk(name,start_address,end_address,purpose,color,this));
+    bool found(false);
+    for(int chunks_index(0); chunks_index < mChunks.length(); chunks_index++)
+    {
+        if(mChunks.at(chunks_index)->mStartAddr >= start_address)
+        {
+            mChunks.insert(chunks_index,memchunk);
+            found = true;
+            break;
+        }
+    }
+    if(!found)
+    {
+        mChunks.append(memchunk);
+    }
+    emit chunksChanged();
+}
+
 QQmlListProperty<MemoryChunk> MemoryInitFile::chunks()
 {
     return QQmlListProperty<MemoryChunk>(this, mChunks);
 }
 
 
+
+
+QString MemoryInitFile::getLastAddress()
+{
+    QString ret_address;
+    if(mChunks.isEmpty())
+    {
+        ret_address = getAddressString(0, mLastAddress.length());
+    }
+    else
+    {
+        MemoryChunk * last_chunk(mChunks.last());
+        ret_address = getAddressString(last_chunk->mEndAddr+1,mLastAddress.length());
+    }
+    return ret_address;
+}
 
 
 /*void MemoryInitFile::appendToList(QQmlListProperty<MemoryChunk> *list, MemoryChunk *chunk)
@@ -325,6 +361,9 @@ void MemoryInitFile::parseInputFile(QUrl &file)
 {
   QString file_path(file.toLocalFile());
   file_path = QDir::toNativeSeparators(file_path);
+
+  mCurrentFilePath = file_path;
+  emit filePathChanged(mCurrentFilePath);
   QFile input_file(file_path);
   input_file.open(QFile::ReadOnly | QFile::Text);
   QString inputBuffer(input_file.readAll());
@@ -676,6 +715,7 @@ void MemoryInitFile::parseInputFile(QUrl &file)
 }
 
 
+
 void MemoryInitFile::removeChunkAt(long address)
 {
     mCurrentChunk->removeValueAt(address);
@@ -754,10 +794,14 @@ void MemoryInitFile::setCurrentChunkPurpose(QString purpose)
 void MemoryInitFile::writeFile(QString filepath)
 {
     bool generate_file(false);
-    QString converted_file_path = QDir::toNativeSeparators(filepath);
+    QUrl  url(filepath);
+    QString converted_file_path = QDir::toNativeSeparators(url.toLocalFile());
     if(QFile::exists(converted_file_path))
     {
         // file already exists pop overwrite notice?
+        QString str("(1)");
+        converted_file_path.insert(converted_file_path.length()-4,str);
+        generate_file = true;
 
     }
     else
@@ -807,18 +851,17 @@ void MemoryInitFile::writeFile(QString filepath)
             buffer.append(chunk->mPurpose);
             buffer.append("\"\n");
             buffer.append("startAddress:\"");
-            buffer.append(chunk->mStartAddr);
+            buffer.append(getAddressString(chunk->mStartAddr,mLastAddress.length()));
             buffer.append("\"\n");
             buffer.append("endAddress:\"");
-            buffer.append(chunk->mEndAddr);
+            buffer.append(getAddressString(chunk->mEndAddr,mLastAddress.length()));
             buffer.append("\"\n%\n");
             // write header (buffered)
             output_file.write(buffer);
             // assume sequential block of data (or issues with data)
             long current_address(chunk->mStartAddr);
             long end_address(chunk->mEndAddr);
-            QString end_addr_str(getAddressString(chunk->mEndAddr));
-            int length_end_addr(end_addr_str.length());
+            QString end_addr_str(getAddressString(chunk->mEndAddr,mLastAddress.length()));
             int index;
             while(current_address <= end_address)
             {
@@ -829,10 +872,10 @@ void MemoryInitFile::writeFile(QString filepath)
                     ChunkData * data = chunk->mData.at(index);
                     long value(data->mValue);
                     QString comment(data->mComment);
-                    QString addr_str(getAddressString(current_address, length_end_addr));
+                    QString addr_str(getAddressString(current_address, mLastAddress.length()));
                     buffer.append(addr_str);
                     buffer.append(" : ");
-                    QString value_str(getValueString(value,length_end_addr));
+                    QString value_str(getValueString(value,log2(mWidth.toInt())));
                     buffer.append(value_str);
                     buffer.append(";");
                     if(!comment.isEmpty())
@@ -854,6 +897,7 @@ void MemoryInitFile::writeFile(QString filepath)
         }
         buffer = "END;";
         output_file.write(buffer);
+        qDebug() << "Wrote File!";
         output_file.close();
     }
 }

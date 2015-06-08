@@ -78,6 +78,25 @@ void MemoryChunk::setStartAddress(long startaddress)
     mStartAddr = startaddress;
 }
 
+
+void MemoryChunk::updateValueAt(long address, long value, QString comment)
+{
+    ChunkData * ptr(nullptr);
+    foreach(ChunkData * data, mData)
+    {
+        if(data->mAddress == address)
+        {
+            ptr = data;
+            break;
+        }
+    }
+    if(ptr)
+    {
+        ptr->setValue(value);
+        ptr->setComment(comment);
+    }
+}
+
 bool MemoryChunk::removeValueAt(long address)
 {
     ChunkData * ptr(nullptr);
